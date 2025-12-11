@@ -1,0 +1,16 @@
+Установите Python 3.10+ и перейдите в папку проекта.
+
+Клонируйте репозиторий:
+
+git clone https://github.com/daniik0022/habits_bot
+cd habits_bot
+
+Установите зависимости:
+
+pip install -r requirements.txt
+
+Запустите проект:
+
+python main.py
+
+Откройте бота в Telegram и отправьте команду /start.
