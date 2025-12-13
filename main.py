@@ -14,7 +14,6 @@ from aiogram.exceptions import TelegramNetworkError
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-# ================= НАСТРОЙКИ =================
 
 API_TOKEN = "8434810807:AAHt639Hf4s2MjbybBkZvFD1oDBkng2n-xA"
 DB_NAME = "habits.db"
@@ -28,20 +27,18 @@ bot = Bot(
 dp = Dispatcher()
 
 
-# ================= СОСТОЯНИЯ (FSM) =================
 
 class AddHabitState(StatesGroup):
     waiting_for_name = State()
     waiting_for_time = State()
 
 
-# ================= БАЗА ДАННЫХ =================
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    # Таблица привычек с полем reminder_time
+    
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS habits (
@@ -54,7 +51,7 @@ def init_db():
         """
     )
 
-    # Таблица выполнений
+    
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS completions (
@@ -105,9 +102,6 @@ def get_habits(user_id: int):
 
 
 def get_habits_for_time(reminder_time: str):
-    """
-    Вернуть (user_id, name) всех активных привычек с заданным временем напоминания.
-    """
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute(
@@ -137,9 +131,6 @@ def mark_done(habit_id: int, day: date):
 
 
 def get_habit_streak(habit_id: int) -> int:
-    """
-    Возвращает текущий стрик (серия дней подряд до сегодня) для привычки.
-    """
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute(
@@ -217,7 +208,6 @@ def get_stats(user_id: int, days: int = 7):
     return stats
 
 
-# ================= КЛАВИАТУРА =================
 
 def main_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
@@ -238,7 +228,7 @@ def main_keyboard() -> ReplyKeyboardMarkup:
     )
 
 
-# ================= ХЕНДЛЕРЫ =================
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -257,7 +247,6 @@ async def cmd_start(message: types.Message):
     await message.answer(text, reply_markup=main_keyboard())
 
 
-# ----- Добавление привычки (диалог: название + время) -----
 
 @dp.message(Command("addhabit"))
 async def cmd_addhabit(message: types.Message, state: FSMContext):
@@ -296,7 +285,6 @@ async def habit_time_received(message: types.Message, state: FSMContext):
     raw_time = message.text.strip()
 
     try:
-        # Разбор и нормализация времени
         parsed = datetime.strptime(raw_time, "%H:%M")
         reminder_time = parsed.strftime("%H:%M")
     except ValueError:
@@ -325,7 +313,6 @@ async def habit_time_received(message: types.Message, state: FSMContext):
     await state.clear()
 
 
-# ----- Список привычек -----
 
 @dp.message(Command("listhabits"))
 async def cmd_listhabits(message: types.Message):
@@ -365,7 +352,6 @@ async def listhabits_button(message: types.Message):
     await cmd_listhabits(message)
 
 
-# ----- Отметка выполнения -----
 
 @dp.message(Command("done"))
 async def cmd_done(message: types.Message):
@@ -414,7 +400,6 @@ async def callback_done(callback: types.CallbackQuery):
     await callback.message.edit_text("Отметка выполнения сохранена.")
 
 
-# ----- Удаление привычек -----
 
 @dp.message(Command("deletehabit"))
 async def cmd_deletehabit(message: types.Message):
@@ -464,7 +449,6 @@ async def callback_delete_habit(callback: types.CallbackQuery):
     await callback.message.edit_text("Привычка удалена из списка активных.")
 
 
-# ----- Статистика -----
 
 @dp.message(Command("stats"))
 async def cmd_stats(message: types.Message):
@@ -499,7 +483,6 @@ async def stats_button(message: types.Message):
     await cmd_stats(message)
 
 
-# ----- Fallback -----
 
 @dp.message()
 async def fallback(message: types.Message):
@@ -512,13 +495,8 @@ async def fallback(message: types.Message):
     )
 
 
-# ================= ФОНОВЫЙ ПРОЦЕСС НАПОМИНАНИЙ =================
 
 async def reminders_worker():
-    """
-    Каждую минуту проверяет, не наступило ли время напоминаний,
-    и отправляет сообщения пользователям.
-    """
     logging.info("Фоновый процесс напоминаний запущен.")
     while True:
         now = datetime.now()
@@ -540,11 +518,9 @@ async def reminders_worker():
         await asyncio.sleep(60)
 
 
-# ================= ЗАПУСК =================
 
 async def main():
     init_db()
-    # запускаем фоновую задачу напоминаний
     asyncio.create_task(reminders_worker())
 
     while True:
